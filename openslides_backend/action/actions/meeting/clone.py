@@ -38,18 +38,7 @@ class MeetingClone(MeetingImport):
     )
 
     def update_instance(self, instance: Dict[str, Any]) -> Dict[str, Any]:
-        meeting_json_old = export_meeting(
-            self.datastore, self.media, instance["meeting_id"]
-        )
-
-        # Transform data format
-        # TODO: Transform format earlier, e. g. in export_meeting function
-        meeting_json: Dict[str, Any] = {}
-        for collection, objs in meeting_json_old.items():
-            meeting_json[collection] = {}
-            for obj in objs:
-                meeting_json[collection][str(obj["id"])] = obj
-
+        meeting_json = export_meeting(self.datastore, instance["meeting_id"])
         instance["meeting"] = meeting_json
 
         # checks if the meeting is correct
@@ -291,11 +280,14 @@ class MeetingClone(MeetingImport):
         )
 
     def check_permissions(self, instance: Dict[str, Any]) -> None:
-        meeting = self.datastore.fetch_model(
-            FullQualifiedId(Collection("meeting"), instance["meeting_id"]),
-            ["committee_id"],
-        )
-        committee_id = meeting["committee_id"]
+        if instance.get("committee_id"):
+            committee_id = instance["committee_id"]
+        else:
+            meeting = self.datastore.fetch_model(
+                FullQualifiedId(Collection("meeting"), instance["meeting_id"]),
+                ["committee_id"],
+            )
+            committee_id = meeting["committee_id"]
         if not has_committee_management_level(
             self.datastore,
             self.user_id,
@@ -305,15 +297,3 @@ class MeetingClone(MeetingImport):
             raise PermissionDenied(
                 f"Missing {CommitteeManagementLevel.CAN_MANAGE.get_verbose_type()}: {CommitteeManagementLevel.CAN_MANAGE} for committee {committee_id}"
             )
-        if (
-            payload_committee_id := instance.get("committee_id")
-        ) and payload_committee_id != committee_id:
-            if not has_committee_management_level(
-                self.datastore,
-                self.user_id,
-                CommitteeManagementLevel.CAN_MANAGE,
-                payload_committee_id,
-            ):
-                raise PermissionDenied(
-                    f"Missing {CommitteeManagementLevel.CAN_MANAGE.get_verbose_type()}: {CommitteeManagementLevel.CAN_MANAGE} for committee {payload_committee_id}"
-                )

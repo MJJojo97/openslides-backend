@@ -1,7 +1,7 @@
-from typing import Any, Dict
+from typing import Any, Dict, List, cast
 from unittest.mock import MagicMock
 
-from openslides_backend.models.models import AgendaItem
+from openslides_backend.models.models import AgendaItem, Meeting, Projector
 from openslides_backend.permissions.management_levels import CommitteeManagementLevel
 from tests.system.action.base import BaseActionTestCase
 
@@ -34,12 +34,19 @@ class MeetingClone(BaseActionTestCase):
                 "motion_workflow_ids": [1],
                 "logo_$_id": None,
                 "font_$_id": [],
-                "default_projector_$_id": None,
+                "default_projector_$_id": Meeting.default_projector__id.replacement_enum,
+                **{
+                    f"default_projector_${name}_id": 1
+                    for name in cast(
+                        List[str], Meeting.default_projector__id.replacement_enum
+                    )
+                },
                 "is_active_in_organization_id": 1,
             },
             "group/1": {
                 "meeting_id": 1,
                 "name": "testgroup",
+                "weight": 1,
                 "admin_group_for_meeting_id": 1,
                 "default_group_for_meeting_id": 1,
             },
@@ -65,7 +72,14 @@ class MeetingClone(BaseActionTestCase):
                 "meeting_id": 1,
                 "used_as_reference_projector_meeting_id": 1,
                 "name": "Default projector",
-                "used_as_default_$_in_meeting_id": [],
+                "used_as_default_$_in_meeting_id": Projector.used_as_default__in_meeting_id.replacement_enum,
+                **{
+                    f"used_as_default_${name}_in_meeting_id": 1
+                    for name in cast(
+                        List[str],
+                        Projector.used_as_default__in_meeting_id.replacement_enum,
+                    )
+                },
             },
         }
 
@@ -93,9 +107,15 @@ class MeetingClone(BaseActionTestCase):
                 "motion_workflow_ids": [2],
                 "logo_$_id": None,
                 "font_$_id": [],
-                "default_projector_$_id": None,
+                "default_projector_$_id": Meeting.default_projector__id.replacement_enum,
             },
         )
+
+    def test_clone_group_with_weight(self) -> None:
+        self.set_models(self.test_models)
+        response = self.request("meeting.clone", {"meeting_id": 1})
+        self.assert_status_code(response, 200)
+        self.assert_model_exists("group/2", {"weight": 1})
 
     def test_clone_with_users(self) -> None:
         self.test_models["meeting/1"]["user_ids"] = [1]
@@ -365,7 +385,6 @@ class MeetingClone(BaseActionTestCase):
             "users_allow_self_set_present": True,
             "users_pdf_welcometitle": "title",
             "users_pdf_welcometext": "text",
-            "users_pdf_url": "url",
             "users_pdf_wlan_ssid": "wifi",
             "users_pdf_wlan_password": "pw",
             "users_pdf_wlan_encryption": "WEP",
@@ -440,7 +459,7 @@ class MeetingClone(BaseActionTestCase):
                 "user/3": {"committee_ids": [1]},
             }
         )
-        response = self.request(
+        self.execute_action_internally(
             "meeting.create",
             {
                 "committee_id": 1,
@@ -454,7 +473,6 @@ class MeetingClone(BaseActionTestCase):
                 "organization_tag_ids": [],
             },
         )
-        self.assert_status_code(response, 200)
         response = self.request("meeting.clone", {"meeting_id": 1})
         self.assert_status_code(response, 200)
 
@@ -472,8 +490,8 @@ class MeetingClone(BaseActionTestCase):
             {
                 "committee/2": {"organization_id": 1},
                 "user/1": {
-                    "committee_$1_management_level": CommitteeManagementLevel.CAN_MANAGE,
-                    "committee_$2_management_level": CommitteeManagementLevel.CAN_MANAGE,
+                    "committee_$_management_level": ["can_manage"],
+                    "committee_$can_manage_management_level": [1, 2],
                     "committee_ids": [1, 2],
                     "organization_management_level": None,
                 },
@@ -507,32 +525,16 @@ class MeetingClone(BaseActionTestCase):
             "meeting/2", {"is_active_in_organization_id": 1, "committee_id": 2}
         )
 
-    def test_permissions_missing_meeting_committee_permission(self) -> None:
-        self.set_models(self.test_models)
-        self.set_models(
-            {
-                "committee/2": {"organization_id": 1},
-                "user/1": {
-                    "committee_$2_management_level": CommitteeManagementLevel.CAN_MANAGE,
-                    "committee_ids": [2],
-                    "organization_management_level": None,
-                },
-            }
-        )
-        response = self.request("meeting.clone", {"meeting_id": 1, "committee_id": 2})
-        self.assert_status_code(response, 403)
-        self.assertIn(
-            "Missing CommitteeManagementLevel: can_manage for committee 1",
-            response.json["message"],
-        )
-
     def test_permissions_missing_payload_committee_permission(self) -> None:
         self.set_models(self.test_models)
         self.set_models(
             {
                 "committee/2": {"organization_id": 1},
                 "user/1": {
-                    "committee_$1_management_level": CommitteeManagementLevel.CAN_MANAGE,
+                    "committee_$_management_level": [
+                        CommitteeManagementLevel.CAN_MANAGE
+                    ],
+                    "committee_$can_manage_management_level": [1],
                     "committee_ids": [1],
                     "organization_management_level": None,
                 },
@@ -545,10 +547,32 @@ class MeetingClone(BaseActionTestCase):
             response.json["message"],
         )
 
+    def test_permissions_missing_source_committee_permission(self) -> None:
+        self.set_models(self.test_models)
+        self.set_models(
+            {
+                "committee/2": {"organization_id": 1},
+                "user/1": {
+                    "committee_$_management_level": [
+                        CommitteeManagementLevel.CAN_MANAGE
+                    ],
+                    "committee_$can_manage_management_level": [2],
+                    "committee_ids": [2],
+                    "organization_management_level": None,
+                },
+            }
+        )
+        response = self.request("meeting.clone", {"meeting_id": 1})
+        self.assert_status_code(response, 403)
+        self.assertIn(
+            "Missing CommitteeManagementLevel: can_manage for committee 1",
+            response.json["message"],
+        )
+
     def test_clone_with_created_topic_and_agenda_type(self) -> None:
         self.set_models(self.test_models)
 
-        response = self.request(
+        result = self.execute_action_internally(
             "topic.create",
             {
                 "meeting_id": 1,
@@ -557,8 +581,7 @@ class MeetingClone(BaseActionTestCase):
                 "agenda_duration": 60,
             },
         )
-        self.assert_status_code(response, 200)
-        topic_fqid = f'topic/{response.json["results"][0][0]["id"]}'
+        topic_fqid = f"topic/{cast(List[Dict[str, int]], result)[0]['id']}"
         topic = self.get_model(topic_fqid)
         self.assertNotIn("agenda_type", topic)
         self.assertNotIn("agenda_duration", topic)

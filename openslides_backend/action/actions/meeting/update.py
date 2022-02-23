@@ -18,7 +18,6 @@ from ...generics.update import UpdateAction
 from ...util.assert_belongs_to_meeting import assert_belongs_to_meeting
 from ...util.default_schema import DefaultSchema
 from ...util.register import register_action
-from ..meeting.shared_meeting import used_as_default_for_schema_required
 from .mixins import GetMeetingIdFromIdMixin
 
 meeting_settings_keys = [
@@ -114,7 +113,6 @@ meeting_settings_keys = [
     "users_allow_self_set_present",
     "users_pdf_welcometitle",
     "users_pdf_welcometext",
-    "users_pdf_url",
     "users_pdf_wlan_ssid",
     "users_pdf_wlan_password",
     "users_pdf_wlan_encryption",
@@ -146,7 +144,6 @@ class MeetingUpdate(UpdateAction, GetMeetingIdFromIdMixin):
             "template_for_committee_id",
             "reference_projector_id",
             "organization_tag_ids",
-            "url_name",
             "jitsi_domain",
             "jitsi_room_name",
             "jitsi_room_password",
@@ -154,10 +151,8 @@ class MeetingUpdate(UpdateAction, GetMeetingIdFromIdMixin):
             "enable_anonymous",
             "custom_translations",
             "present_user_ids",
+            "default_projector_$_id",
         ],
-        additional_optional_fields={
-            "default_projector_$_id": used_as_default_for_schema_required,
-        },
     )
 
     def update_instance(self, instance: Dict[str, Any]) -> Dict[str, Any]:
@@ -214,7 +209,6 @@ class MeetingUpdate(UpdateAction, GetMeetingIdFromIdMixin):
             [
                 field in instance
                 for field in [
-                    "url_name",
                     "enable_anonymous",
                     "custom_translations",
                 ]

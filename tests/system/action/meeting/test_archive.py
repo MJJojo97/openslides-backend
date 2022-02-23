@@ -24,8 +24,13 @@ class MeetingArchiveTest(BaseActionTestCase):
     def test_archive_simple(self) -> None:
         response = self.request("meeting.archive", {"id": 1})
         self.assert_status_code(response, 200)
-        self.assert_model_exists("meeting/1", {"is_active_in_organization_id": None})
-        self.assert_model_exists("organization/1", {"active_meeting_ids": []})
+        self.assert_model_exists(
+            "meeting/1",
+            {"is_active_in_organization_id": None, "is_archived_in_organization_id": 1},
+        )
+        self.assert_model_exists(
+            "organization/1", {"active_meeting_ids": [], "archived_meeting_ids": [1]}
+        )
 
     def test_archive_2_meetings(self) -> None:
         self.set_models(
@@ -59,7 +64,10 @@ class MeetingArchiveTest(BaseActionTestCase):
         self.set_models(
             {
                 "user/1": {
-                    "committee_$1_management_level": CommitteeManagementLevel.CAN_MANAGE,
+                    "committee_$_management_level": [
+                        CommitteeManagementLevel.CAN_MANAGE
+                    ],
+                    "committee_$can_manage_management_level": [1],
                     "committee_ids": [1],
                 }
             }

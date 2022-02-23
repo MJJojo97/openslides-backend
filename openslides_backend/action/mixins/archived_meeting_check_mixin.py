@@ -28,6 +28,7 @@ class CheckForArchivedMeetingMixin(Action):
                 raise NotImplementedError()
             if (
                 isinstance(model_field, fields.BaseTemplateField)
+                and model_field.replacement_collection
                 and model_field.replacement_collection.collection == "meeting"  # type: ignore
             ):
                 meeting_ids.update(map(int, instance[fname].keys()))
@@ -56,7 +57,8 @@ class CheckForArchivedMeetingMixin(Action):
                 for meeting_id, value in meetings.items()
                 if not value.get("is_active_in_organization_id")
             ]
-            if archived_meetings:
+
+            if archived_meetings and not self.skip_archived_meeting_check:
                 raise ActionException(
                     f'Meetings {", ".join(archived_meetings)} cannot be changed, because they are archived.'
                 )

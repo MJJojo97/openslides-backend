@@ -102,7 +102,6 @@ class Action(BaseAction, metaclass=SchemaProvider):
         relation_manager: RelationManager,
         logging: LoggingModule,
         skip_archived_meeting_check: bool = False,
-        parent_action: str = "",
     ) -> None:
         self.services = services
         self.auth = services.authentication()
@@ -118,7 +117,6 @@ class Action(BaseAction, metaclass=SchemaProvider):
             )
         else:
             self.skip_archived_meeting_check = skip_archived_meeting_check
-        self.parent_action = parent_action
         self.write_requests = []
         self.results = []
 
@@ -410,7 +408,8 @@ class Action(BaseAction, metaclass=SchemaProvider):
         Validate required fields with the events of one WriteRequest.
         Precondition: Events are sorted create/update/delete-events
         Not implemented: required RelationListFields of all types raise a NotImplementedError, if there exist
-        one, during getting required_fields from model.
+        one, during getting required_fields from model, except TemplateRelationField and
+        TemplateRelationListField with replacement_enum-attribute.
         """
         fdict: Dict[FullQualifiedId, Dict[str, Any]] = {}
         for event in write_request.events:
@@ -561,7 +560,6 @@ class Action(BaseAction, metaclass=SchemaProvider):
             self.relation_manager,
             self.logging,
             skip_archived_meeting_check,
-            self.name,
         )
         write_request, action_results = action.perform(
             action_data, self.user_id, internal=True

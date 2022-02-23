@@ -1,5 +1,5 @@
 {
-    "_migration_index": 12,
+    "_migration_index": 18,
     "organization": {
         "1": {
             "id": 1,
@@ -9,7 +9,7 @@
             "privacy_policy": "",
             "login_text": "Welcome to OpenSlides. Please login.",
             "reset_password_verbose_errors": false,
-            "enable_electronic_voting": false,
+            "enable_electronic_voting": true,
             "enable_chat": false,
             "limit_of_meetings": 0,
             "limit_of_users": 0,
@@ -19,6 +19,7 @@
             "active_meeting_ids": [
                 1
             ],
+	    "archived_meeting_ids": [],
             "resource_ids": [],
             "organization_tag_ids": [],
             "theme_id": 1,
@@ -232,9 +233,10 @@
             "meeting_ids": [
                 1
             ],
-            "template_meeting_id": null,
+            "template_meeting_ids": [],
             "default_meeting_id": 1,
             "user_ids": [],
+            "user_$_management_level": [],
             "forward_to_committee_ids": [],
             "receive_forwardings_from_committee_ids": [],
             "organization_tag_ids": [],
@@ -248,6 +250,7 @@
             "welcome_text": "[Space for your welcome text]",
             "name": "Default meeting",
             "is_active_in_organization_id": 1,
+	    "is_archived_in_organization_id": null,
             "description": "",
             "location": "",
             "start_time": 0,
@@ -257,7 +260,6 @@
             "jitsi_room_name": "",
             "jitsi_room_password": "",
             "enable_chat": false,
-            "url_name": "",
             "template_for_committee_id": null,
             "enable_anonymous": false,
             "custom_translations": {},
@@ -348,7 +350,6 @@
             "users_allow_self_set_present": true,
             "users_pdf_welcometitle": "Welcome to OpenSlides",
             "users_pdf_welcometext": "[Place for your welcome and help text]",
-            "users_pdf_url": "https://example.com",
             "users_pdf_wlan_ssid": "",
             "users_pdf_wlan_password": "",
             "users_pdf_wlan_encryption": "",
@@ -501,6 +502,7 @@
                 "projector.can_see",
                 "user.can_see"
             ],
+            "weight": 1,
             "user_ids": [],
             "default_group_for_meeting_id": 1,
             "admin_group_for_meeting_id": null,
@@ -520,6 +522,7 @@
             "id": 2,
             "name": "Admin",
             "permissions": [],
+            "weight": 2,
             "user_ids": [],
             "default_group_for_meeting_id": null,
             "admin_group_for_meeting_id": 1,
@@ -556,6 +559,7 @@
                 "projector.can_see",
                 "user.can_see"
             ],
+            "weight": 3,
             "user_ids": [],
             "default_group_for_meeting_id": null,
             "admin_group_for_meeting_id": null,
@@ -603,6 +607,7 @@
                 "user.can_see",
                 "user.can_manage"
             ],
+            "weight": 4,
             "user_ids": [],
             "default_group_for_meeting_id": null,
             "admin_group_for_meeting_id": null,
