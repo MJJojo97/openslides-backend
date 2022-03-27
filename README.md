@@ -72,9 +72,21 @@ The action component listens to port 9002. The presenter component listens to po
 
   Use one of the following values to start only one component of this service: `action` or `presenter`. Defaults to all of them using different child processes. If using `all` you can shut down all compontes by sending SIGTERM to Python master process.
 
+* ACTION_PORT
+
+  Action component listens on this port. Default: 9002
+
+* PRESENTER_PORT
+
+  Presenter component listens on this port. Default 9003
+
 * OPENSLIDES_DEVELOPMENT
 
-  Set this variable e. g. to 1 to set loglevel to debug and activate Gunicorn's reload mechanism.
+  Set this variable e. g. to 1 to set loglevel to `debug` and activate Gunicorn's reload mechanism.
+
+* OPENSLIDES_LOGLEVEL
+
+  In production mode you can set the loglevel to `debug`, `info`, `warning`, `error` or `critical`. Default is `info`.
 
 * OPENSLIDES_BACKEND_RAISE_4XX
 
@@ -112,6 +124,10 @@ The action component listens to port 9002. The presenter component listens to po
 
   Path of datastore writer service. Default: /internal/datastore/writer
 
+* OPENSLIDES_BACKEND_NUM_WORKERS
+
+  Number of Gunicorn workers. Default: 1
+
 * OPENSLIDES_BACKEND_WORKER_TIMEOUT
 
   Gunicorn worker timeout in seconds. Default: 30
@@ -119,6 +135,7 @@ The action component listens to port 9002. The presenter component listens to po
 * AUTH_HOST and AUTH_PORT
 
   Implicitly used by the authlib to get the endpoint for the auth-service
+
 
 # Some curl examples
 
@@ -146,7 +163,7 @@ General schema for internal routes: `/internal/<route>`
 * `/internal/handle_request`: Same as the first route, but only for internal usage: All permission checks are skipped
   and created write requests will have id -1.
 * `/system/action/health`: Return `{"status": "running"}` if successful. Useful for status checks against the backend.
-* `/internal/migrations`: Provides remote access to the migration tool.
+* `/internal/migrations`: Provides remote access to the migration tool. For more information, take a look at the [migration route docs](/docs/migration_route.md)
 
 ### Presenter Service
 
